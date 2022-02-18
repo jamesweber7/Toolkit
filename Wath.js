@@ -115,6 +115,11 @@ class Wath {
         return this.midpointIntegral(funct, a, b, steps, minDx);
     }
 
+    static midpointIntegral(funct, a, b, steps = this.STANDARD_INTEGRATION_STEPS, minDx=this.ACCURATE_DX) {
+        let dx = this.getStep(a, b, steps, minDx);
+        return this.midpointRiemann(funct, a, b, dx);
+    }
+
     static trapeziumIntegral(funct, a, b, steps=this.STANDARD_INTEGRATION_STEPS, minDx=this.ACCURATE_DX) {
         a = Math.max(-this.IntegrationInfinity, a);
         b = Math.min( this.IntegrationInfinity, b);
@@ -122,9 +127,20 @@ class Wath {
         return this.trapeziumApproximation(funct, a, b, dx);
     }
 
-    static midpointIntegral(funct, a, b, steps = this.STANDARD_INTEGRATION_STEPS, minDx=this.ACCURATE_DX) {
-        let dx = this.getStep(a, b, steps, minDx);
-        return this.midpointRiemann(funct, a, b, dx);
+    // lefthand or righthand error
+    // ϵ ≤ |error|
+    // ϵ ≤ |R - L|*dx
+    // ϵ ≤ |f(b) - f(a)|*dx
+    static offhandRiemannError(funct, a, b, step=this.getStep(a, b)) {
+        return Math.abs(funct(b) - funct(a)) * step;
+    }
+
+    // midpoint error
+    // ϵ ≤ |error|
+    // ϵ ≤ |R - L|*dx / 2
+    // ϵ ≤ |f(b) - f(a)|*dx / 2
+    static midpointRiemannError(funct, a, b, step=this.getStep(a, b)) {
+        return Math.abs(funct(b) - funct(a)) * step / 2;
     }
 
     // get step size based on a, b, # of steps, and minDx
@@ -935,7 +951,10 @@ class Wath {
     //     ⎲
     // μ = ⎳ xᵢ ÷ N
     static populationMean(population) {
-        return this.discreteFairMean(arguments);
+        if (!Array.isArray(population)) {
+            population = [...arguments];
+        }
+        return this.discreteFairMean(population);
     }
 
     //         N
@@ -944,13 +963,13 @@ class Wath {
     //     ⎝i=1        ⎠
     static populationVariance(population) {
         if (!Array.isArray(population)) {
-            return this.discreteFairMean([...arguments]);
+            return this.populationVariance([...arguments]);
         }
         if (population.length <= 0) {
             throw "what's the variance of nothing?"
         }
         // μ
-        let mean = this.discreteFairMean(population);
+        let mean = this.populationMean(population);
         let total;
         population.forEach(value => {
             total += (value - mean)**2;
@@ -960,14 +979,20 @@ class Wath {
 
     // σ = √σ²
     static populationDeviation(population) {
+        if (!Array.isArray(population)) {
+            population = [...arguments];
+        }
         // σ = √σ²
-        return this.populationVariance(arguments) ** 0.5;
+        return this.populationVariance(population) ** 0.5;
     }
 
     // __  ⎲
     // X = ⎳ xᵢ ÷ n
     static sampleMean(samples) {
-        return this.discreteFairMean(arguments);
+        if (!Array.isArray(samples)) {
+            samples = [...arguments];
+        }
+        return this.discreteFairMean(samples);
     }
 
     
@@ -983,18 +1008,21 @@ class Wath {
             throw "what's the variance of nothing?"
         }
         // μ
-        let mean = this.discreteFairMean(samples);
-        let total;
+        let mean = this.sampleMean(samples);
+        let total = 0;
         samples.forEach(sample => {
             total += (sample - mean)**2;
         });
-        return total / samples.length;
+        return total / (samples.length - 1);
     }
 
     // s = √s²
     static sampleDeviation(samples) {
+        if (!Array.isArray(samples)) {
+            samples = [...arguments];
+        }
         // s = √s²
-        return this.sampleVariance(arguments) ** 0.5;
+        return this.sampleVariance(samples) ** 0.5;
     }
 
 
@@ -1012,7 +1040,14 @@ class Wath {
     /*=============================================
     =                    Misc                     =
     =============================================*/
-    
+
+    static isNumber(num) {
+        return typeof num === 'number';
+    }
+
+    static absDifference(value1, value2) {
+        return Math.abs(value1 - value2);
+    }    
     
     /*----------  Random  ----------*/
     
@@ -1053,7 +1088,7 @@ class Wath {
         // permutation 1            | 0, 1, 2, ... length-1, length-2
         // permutation length!-1    | length-1, length-2, ... 2, 1, 0
 
-        let shuffled = Array(length);
+        const shuffled = Array(length);
         for (let i = 0; i < length; i++) {
             // section: group of consecutive equal vertical indexes (the same # can count for multiple sections if it is not consecutive)
             // let numSections = this.permutation(length, i + 1);
@@ -1064,6 +1099,83 @@ class Wath {
         }
         return shuffled;
 
+    }
+
+    // O(n·n!)
+    // working version of shuffle, but O(n·n!)
+    // Michal Forišek https://www.quora.com/How-would-you-explain-an-algorithm-that-generates-permutations-using-lexicographic-ordering
+    // Coding Train https://www.youtube.com/watch?v=goUlyp4rwiU
+    static shufflePrototype(arr) {
+        const length = arr.length;
+        if (arr.length > 10) {
+            throw "you're fixin to spend a lot of time waiting";
+        }
+
+        // number of ways array can be shuffled
+        // permutations = length!
+        const permutations = this.factorial(length);
+
+        // selected permutation - selected order of array elements
+        const selectedPermutation = this.randomInt(0, permutations - 1);
+
+        // permutation selected by its position in lexicographic arrangement (by index)
+        // permutation 0            | 0, 1, 2, ... length-2, length-1
+        // permutation 1            | 0, 1, 2, ... length-1, length-2
+        // permutation length!-1    | length-1, length-2, ... 2, 1, 0
+
+        // [{0, arr[0]}, {1, arr[1]}, ... {length-1, arr[length-1]}]
+        let shuffler = Wunctions.filledArray(length, 
+            index => {
+                return {
+                    index: index,
+                    value: arr[index]
+                }
+            });
+
+        // each iteration reorders shuffled to nth permutation
+        for (let n = 0; n < selectedPermutation; n++) {
+            shuffler = this.lexicographicallyStepArray(shuffler);
+        }
+
+        const shuffled = Wunctions.filledArray(length, 
+            index => {
+                return shuffler[index].value;
+            });
+        return shuffled;
+    }
+
+    static lexicographicallyStepArray(arr) {
+        const length = arr.length;
+        // 1. Find the largest x such that P[x]<P[x+1].
+        // (If there is no such x, P is the last permutation.)
+        let largestI = -1;
+        for (let i = 0; i < length - 1; i++) {
+            if (arr[i].index < arr[i + 1].index) {
+                largestI = i;
+            }
+        }
+        // finished (arr is lexicographically reversed)
+        if (largestI === -1) {
+            console.log('finished');
+            return arr;
+        }
+
+        // 2. Find the largest y such that P[x]<P[y].
+        let largestJ = -1;
+        for (let j = 0; j < length; j++) {
+            if (arr[largestI].index < arr[j].index) {
+                largestJ = j;
+            }
+        }
+
+
+        // 3. Swap P[x] and P[y].
+        arr = Wunctions.swapArrayElements(arr, largestI, largestJ);
+
+        // 4. Reverse P[x+1 .. n].
+        const end = arr.splice(largestI + 1);
+        end.reverse();
+        return arr.concat(end);
     }
 
     // just returns ceiling right now
