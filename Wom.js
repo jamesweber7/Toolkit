@@ -44,11 +44,12 @@ class Wom {
         return this.createTo(document.head, tagName, id);
     }
 
-    static createTextarea(id='', autoResize=true) {
+    static createTextarea(id='', autoResize=true, spellcheck=false) {
         const textarea = this.create('textarea', id);
         if (autoResize) {
             this.addAutoResize(textarea);
         }
+        textarea.spellcheck = spellcheck;
         return textarea;
     }
 

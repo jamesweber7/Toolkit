@@ -234,7 +234,8 @@ let calculator = Wom.createToBody('std-inout', 'calculator');
 calculator.append('Calculator');
 
 let calculatorOutput = Wom.createTo(calculator, 'output', 'calculator-output');
-let calculatorInput = Wom.createTo(calculator, 'textarea', 'calculator-input');
+let calculatorInput = Wom.createTextarea('calculator-input');
+calculator.append(calculatorInput);
 
 calculatorInput.onkeydown = (e) => {
     if (e.key === 'Enter') {
