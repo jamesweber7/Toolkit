@@ -78,6 +78,22 @@ class StringReader {
     static isLowerCase(str) {
         return str === str.toLowerCase();
     }
+
+    static capitalizeFirstLetters(str) {
+        const words = str.split(' ');
+        let capitalized = '';
+        for (let i = 0; i < words.length; i++) {
+            capitalized += this.capitalizeFirstLetter(words[i]);
+            if (i < words.length - 1) {
+                capitalized += ' ';
+            }
+        }
+        return capitalized;
+    }
+
+    static capitalizeFirstLetter(str) {
+        return this.replaceAt(str, str[0].toUpperCase(), 0);
+    }
     
     static replaceAt(str, replaceWith, at) {
         return this.substring(str, 0, at) + replaceWith + this.substring(str, at + 1);
@@ -89,6 +105,14 @@ class StringReader {
             extended += str;
         }
         return extended;
+    }
+
+    static getAlphabeticString(index) {
+        let char = 'abcdefghijklmnopqrstuvwxyz'[index];
+        if (index > 25) {
+            return getAlphabeticChar(index - 26) + char;
+        }
+        return char;
     }
 
 

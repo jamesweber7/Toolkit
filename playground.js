@@ -229,12 +229,19 @@ function testDerivatives() {
 =                    Dom                      =
 =============================================*/
 
-let calculator = Wom.createToBody('std-inout', 'calculator');
+let calculatorMagicSet = Wom.createMagicSet('calculator');
+const calculatorWand = calculatorMagicSet.wand;
+document.body.append(calculatorWand);
+const calculatorMagicbox = calculatorMagicSet.magicbox;
+document.body.append(calculatorMagicbox);
+
+
+const calculator = Wom.createTo(calculatorMagicbox, 'std-inout', 'calculator');
 
 calculator.append('Calculator');
 
-let calculatorOutput = Wom.createTo(calculator, 'output', 'calculator-output');
-let calculatorInput = Wom.createTextarea('calculator-input');
+const calculatorOutput = Wom.createTo(calculator, 'output', 'calculator-output');
+const calculatorInput = Wom.createTextarea('calculator-input');
 calculator.append(calculatorInput);
 
 calculatorInput.onkeydown = (e) => {

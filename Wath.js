@@ -1260,8 +1260,6 @@ class Wath {
         return sum;
     }
     
-    /*=====  End of Misc  ======*/
-    
-    
+    /*=====  End of Misc  ======*/   
 
 }

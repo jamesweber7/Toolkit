@@ -37,6 +37,22 @@ class Wunctions {
         return true;
     }
 
+    static getGreatestElement(arr, funct) {
+        let greatest = {
+            element: arr[0],
+            value: funct(arr[0])
+        };
+        for (let i = 1; i < arr.length; i++) {
+            if(funct(arr[i]) > greatest.value) {
+                greatest = {
+                    element: arr[i],
+                    value: funct(arr[i])
+                };
+            }
+        }
+        return greatest.element;
+    }
+
     
     /*----------  Color  ----------*/
     

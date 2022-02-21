@@ -170,6 +170,58 @@ class Wom {
     }
 
     
+    /*----------  Magic Sets  ----------*/
+    // "magic sets" are a pair of two elements: a "wand" and a "magicbox"
+    // clicking on a wand makes its magicbox appear and disappear
+
+    static createMagicSet(id) {
+        const magicbox = this.createMagicBox(id);
+        const wand = this.createWand(id, magicbox);
+        return {
+            magicbox: magicbox,
+            wand: wand
+        };
+    }
+
+    static createMagicBox(id) {
+        const magicbox = this.create('magicbox', this.magicboxId(id));
+        this.closeMagicBox(magicbox);
+        return magicbox;
+    }
+
+    static toggleMagicBox(magicbox) {
+        magicbox.classList.toggle('hidden');
+    }
+    
+    static openMagicBox(magicbox) {
+        magicbox.classList.remove('hidden');
+    }
+
+    static closeMagicBox(magicbox) {
+        magicbox.classList.add('hidden');
+    }
+
+    static createWand(id, magicbox) {
+        const wand = this.create('button', this.wandId(id));
+        wand.className = 'wand';
+        wand.innerText = StringReader.capitalizeFirstLetters(
+            id.replace(/[-_]/g, ' ')
+        );
+        wand.onclick = () => {
+            this.toggleMagicBox(magicbox);
+        }
+        return wand;
+    }
+
+    static magicboxId(id) {
+        return `${id}-mb`;
+    }
+
+    static wandId(id) {
+        return `${id}-wand`;
+    }
+
+    
     /*----------  Identifiers  ----------*/
     
     static isIdentifier(identifier) {
