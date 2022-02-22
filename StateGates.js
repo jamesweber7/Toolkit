@@ -230,6 +230,15 @@ class BrainlessCPU {
         this.dataBus = '0000';
     }
 
+    executeInstruction(dataIn, addrBus, invert, arith, pass, loadAcc, accToDb, reset, read, write) {
+        // no clk pulse
+        this.write(dataIn, addrBus, invert, arith, pass, loadAcc, accToDb, reset, read, write, '0');
+        // clk pulse
+        this.write(dataIn, addrBus, invert, arith, pass, loadAcc, accToDb, reset, read, write, '1');
+        // no clk pulse
+        this.write(dataIn, addrBus, invert, arith, pass, loadAcc, accToDb, reset, read, write, '0');
+    }
+
     write(dataIn, addrBus, invert, arith, pass, loadAcc, accToDb, reset, read, write, clk) {
 
         this.readProgramRam(addrBus);
