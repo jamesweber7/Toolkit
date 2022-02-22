@@ -7,7 +7,7 @@ class LogicGate {
     static testGate(gate, numInputs, resultReturn=console.log) {
         const iterations = 2**numInputs;
         for (let i = 0; i < iterations; i++) {
-            const bitstring = this.bitstringsToPrecision(
+            const bitstring = this.bitstringToPrecision(
                 this.toBitString(i),
                 numInputs
             );
@@ -17,7 +17,7 @@ class LogicGate {
     }
 
     static bitstringToDecimal(bitstring) {
-        return Number.parseInt(bitstring, 2);
+        return Wath.parseFloat(bitstring, 2);
     }
     
     static toBitString(num) {
@@ -28,7 +28,7 @@ class LogicGate {
         return num.toString(16);
     }
 
-    static bitToBoolean(bit) {
+    static bitToBool(bit) {
         if (bit === '1') {
             return true;
         }
@@ -50,7 +50,7 @@ class LogicGate {
             bits = [...arguments];
         }
         for (let i = 0; i < bits.length; i++) {
-            if (this.bitToBoolean(this.bitNot(bits[i]))) {
+            if (this.bitToBool(this.bitNot(bits[i]))) {
                 return '0';
             }
         }
@@ -81,7 +81,7 @@ class LogicGate {
             bits = [...arguments];
         }
         for (let i = 0; i < bits.length; i++) {
-            if (this.bitToBoolean(bits[i])) {
+            if (this.bitToBool(bits[i])) {
                 return '1';
             }
         }
@@ -108,7 +108,7 @@ class LogicGate {
     }
 
     static bitNot(bit) {
-        const bool = !this.bitToBoolean(bit);
+        const bool = !this.bitToBool(bit);
         return this.booleanToBit(bool);
     }
 
@@ -255,7 +255,7 @@ class LogicGate {
         });
         const length = longestBitstring.length;
         for (let i = 0; i < bitstrings.length; i++) {
-            bitstrings[i] = this.bitstringsToPrecision(bitstrings[i], length);
+            bitstrings[i] = this.bitstringToPrecision(bitstrings[i], length);
         }
         return bitstrings;
     }
@@ -277,7 +277,7 @@ class LogicGate {
             result = adder.sum + result;
             cry = adder.cout;
         }
-        if (this.bitToBoolean(cry)) {
+        if (this.bitToBool(cry)) {
             result = '1' + result;
         }
         return result;
@@ -294,18 +294,80 @@ class LogicGate {
         return sum;
     }
 
-    static sub() {
+    static sub(bitstrings) {
+        if (!Array.isArray(bitstrings)) {
+            bitstrings = [...arguments];
+        }
+        bitstrings = this.standardizeBitStringLengths(bitstrings);
+        let difference = bitstrings[0];
+        for (let i = 1; i < bitstrings.length; i++) {
+            let twosComplement = this.twosComplement(bitstrings[i]);
+            difference = this.add(difference, twosComplement);
+        }
+        if (difference.length > bitstrings[0].length) {
+            difference = difference.substring(1);
+        }
+        return difference;
+    }
 
+    static bitGt(bit1, bit2) {
+        return this.and(
+            bit1,
+            this.not(bit2)
+        );
     }
 
     // >
-    static gt() {
-
+    static gt(bitstring1, bitstring2) {
+        const lengthStandardizedBitStrings = this.standardizeBitStringLengths(bitstring1, bitstring2);
+        bitstring1 = lengthStandardizedBitStrings[0];
+        bitstring2 = lengthStandardizedBitStrings[1];
+        const length = bitstring1.length;
+        for (let i = 0; i < length; i++) {
+            if (this.bitToBool(
+                this.bitGt(
+                    bitstring1[i],
+                    bitstring2[i]))) {
+                        return '1';
+            }
+            else if (this.bitToBool(
+                this.bitLt(
+                    bitstring1[i],
+                    bitstring2[i]))) {
+                        return '0';
+            }
+        }
+        return '0'
     }
 
     // ≥
-    static geq() {
+    static geq(bitstring1, bitstring2) {
+        const lengthStandardizedBitStrings = this.standardizeBitStringLengths(bitstring1, bitstring2);
+        bitstring1 = lengthStandardizedBitStrings[0];
+        bitstring2 = lengthStandardizedBitStrings[1];
+        const length = bitstring1.length;
+        for (let i = 0; i < length; i++) {
+            if (this.bitToBool(
+                this.bitGt(
+                    bitstring1[i],
+                    bitstring2[i]))) {
+                        return '1';
+            }
+            else if (this.bitToBool(
+                this.bitLt(
+                    bitstring1[i],
+                    bitstring2[i]))) {
+                        return '0';
+            }
+        }
+        return '1'
+    }
 
+    static bitLt(bit1, bit2) {
+        return this.and(
+            bit2,
+            this.not(bit1)
+        );
     }
 
     // <
@@ -313,20 +375,56 @@ class LogicGate {
 
     }
 
+    static bitLeq(bit1, bit2) {
+        return this.nand(
+            bit1,
+            this.not(bit2)
+        );
+    }
+
     // ≤
     static leq() {
 
     }
 
-    static eq(bitstrings) {
-        bitstrings = this.standardizeBitStringLengths(bitstrings);
-        let bitstring = bitstrings[0];
-        for (let i = 1; i < bitstrings.length; i++) {
-            if (bitstrings[i] !== bitstring) {
+    static bitEq(bits) {
+        if (!Array.isArray(bits)) {
+            bits = [...arguments];
+        }
+        return this.bitXnor(bits);
+    }
+
+    static twoInputEq(bitstring1, bitstring2) {
+        const standardizeBitStringLengths = this.standardizeBitStringLengths(bitstring1, bitstring2);
+        bitstring1 = standardizeBitStringLengths[0];
+        bitstring2 = standardizeBitStringLengths[1];
+        for (let i = 0; i < bitstring1.length; i++) {
+            if (this.bitToBool(this.not(this.bitEq(bitstring1[i], bitstring2[i])))) {
                 return '0';
             }
         }
         return '1';
+    }
+
+    static eq(bitstrings) {
+        if (!Array.isArray(bitstrings)) {
+            bitstrings = [...arguments];
+        }
+        bitstrings = this.standardizeBitStringLengths(bitstrings);
+        let bitstring = bitstrings[0];
+        for (let i = 1; i < bitstrings.length; i++) {
+            if (this.bitToBool(this.not(this.twoInputEq(bitstring, bitstrings[i])))) {
+                return '0';
+            }
+        }
+        return '1';
+    }
+
+    static neq(bitstrings) {
+        if (!Array.isArray(bitstrings)) {
+            bitstrings = [...arguments];
+        }
+        return this.not(this.eq(bitstrings));
     }
 
     static zero(bitstring) {
@@ -341,6 +439,10 @@ class LogicGate {
     }
 
     static mux(inputs, selector) {
+        if (!Array.isArray(inputs)) {
+            inputs = [...arguments];
+            selector = inputs.pop();
+        }
         const index = this.bitstringToDecimal(selector);
         return inputs[index];
     }
@@ -348,8 +450,8 @@ class LogicGate {
     static demux(enable, selector) {
         const length = 2**selector.length;
         const selected = this.bitstringToDecimal(selector);
-        let output = this.bitstringsToPrecision('', length);
-        if (this.bitToBoolean(this.not(enable))) {
+        let output = this.bitstringToPrecision('', length);
+        if (this.bitToBool(this.not(enable))) {
             return output;
         }        
         output = StringReader.replaceAt(output, '1', selected);
@@ -371,12 +473,24 @@ class LogicGate {
         return bitstring;
     }
 
-    static sll() {
-
+    static sll(bitstring, positions) {
+        bitstring = bitstring.substring(positions);
+        bitstring += StringReader.mult('0', positions);
+        return bitstring;
     }
 
-    static srl() {
+    static srl(bitstring, positions) {
+        const length = bitstring.length;
+        const shifted = this.div(bitstring,
+            this.toBitString(2**positions));
+        return this.bitstringToPrecision(shifted, length);
+    }
 
+    static div(bitstring1, bitstring2) {
+        return this.toBitString(
+            this.bitstringToDecimal(bitstring1) /
+            this.bitstringToDecimal(bitstring2)
+        );
     }
 
     static incrementer(a, inc) {
@@ -431,15 +545,22 @@ class LogicGate {
         return this.andAdd(notNeg.y, b, cin, arith, pass);
     }
 
-    static twoComplement(bitstring) {
+    static twosComplement(bitstring) {
         return this.add(this.not(bitstring), '1');
     }
 
-    static bitstringsToPrecision(bitstring, precision) {
+    static bitstringToPrecision(bitstring, precision) {
+        if (bitstring.length > precision) {
+            bitstring = bitstring.substring(bitstring.length - precision);
+        }
         while (bitstring.length < precision) {
             bitstring = '0' + bitstring;
         }
         return bitstring;
+    }
+
+    static empty(numbits) {
+        return this.bitstringToPrecision('', numbits);
     }
 
     static toIEEE754Float(num) {

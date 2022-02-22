@@ -1259,6 +1259,50 @@ class Wath {
         });
         return sum;
     }
+
+    // like Number.parseFloat, but allows for other based like Number.parseInt
+    static parseFloat(numstring, base=10) {
+        if (base === 10) {
+            return Number.parseFloat(numstring);
+        }
+
+        let isNegative = false;
+        // if includes negative sign
+        if (numstring[0] === '-') {
+            isNegative = true;
+            numstring = numstring.substring(1);
+        }
+
+        let intstring, fracstring;
+        // if float ∈ Q
+        if (numstring.includes('.')) {
+            // numstring = iiiii.fffff
+            // integer part
+            intstring = StringReader.substring(numstring, 0, '.');
+            // fractional part
+            fracstring = StringReader.substringBetween(numstring, '.')
+        } else {
+            // if float ∈ Z
+            intstring = numstring;
+            fracstring = '';
+        }
+
+        // reverse intstring so digit at i == digit*base**i
+        intstring = StringReader.reverse(intstring);
+        let float = 0;
+        for (let i = 0; i < intstring.length; i++) {
+            float += Number.parseInt(intstring[i], base)*(base**i);
+        }
+        
+        for (let i = 0; i < fracstring.length; i++) {
+            float += Number.parseInt(fracstring[i], base)*(base**(-1*(i+1)));
+        }
+
+        if (isNegative) {
+            float *= -1;
+        }
+        return float;
+    }
     
     /*=====  End of Misc  ======*/   
 

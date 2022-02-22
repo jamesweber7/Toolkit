@@ -40,7 +40,7 @@ class StringReader {
     }
 
     static substringAfter(str, from, to=this.NULL_INDEX) {
-        if (!this.isIndex(to)) {
+        if (!this.isIndex(from)) {
             return this.substring(str, from, to);
         }
         str = this.substring(str, from);
@@ -77,6 +77,14 @@ class StringReader {
 
     static isLowerCase(str) {
         return str === str.toLowerCase();
+    }
+
+    static reverse(str) {
+        let reversed = '';
+        for (let i = 0; i < str.length; i++) {
+            reversed = str[i] + reversed;
+        }
+        return reversed;
     }
 
     static capitalizeFirstLetters(str) {
