@@ -7,49 +7,80 @@
 const mips = new Mips();
 
 // set register values
-mips._registerMemory._data[0] = '11111111111111111111111111111111'  // $0
+mips._registerMemory._data[0] = '00000000000000000000000000000000'  // $0 = 0
 mips._registerMemory._data[1] = '00000000000000000000000000000001'  // $1 = 1
-mips._registerMemory._data[2] = '00000000000000000000000000000011'  // $2 = 3
+mips._registerMemory._data[2] = '00000000000000000000000000000010'  // $2 = 2
+mips._registerMemory._data[3] = '00000000000000000000000000000011'  // $3 = 3
+mips._registerMemory._data[4] = '00000000000000000000000000000100'  // $4 = 4
+mips._registerMemory._data[5] = '00000000000000000000000000000101'  // $5 = 5
+mips._registerMemory._data[6] = '00000000000000000000000000000110'  
+mips._registerMemory._data[7] = '00000000000000000000000000000111'  
+mips._registerMemory._data[8] = '00000000000000000000000000001000'  
+mips._registerMemory._data[9] = '00000000000000000000000000001001'  
+mips._registerMemory._data[10] = '00000000000000000000000000001010'  
+mips._registerMemory._data[11] = '11111111111111111111111111111111'  
 
-// ADD INSTRUCTION
-// $0 = $1 + $2
-let opcode = '000000';       // 0     
-let rs = '00001';            // $1
-let rt = '00010';            // $2
-let rd = '00000';            // $0
-let shamt = '00000';         // n/a / 0
-let funct = '100000'         // 0x20
 
-const instruction = opcode + rs + rt + rd + shamt + funct;
+
+
 // give instructions
-const instructions = [
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    instruction,
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000',
-    '11111100000000000000000000000000'
-];
+const instructions = new Array(64);
+// 64 empty instructions
+for (let i = 0; i < instructions.length; i++) {
+    instructions[i] = '11111100000000000000000000000000';
+}
+
+let opcode, rs, rt, rd, shamt, funct;
+let instruction;
+// ADD INSTRUCTION
+// $0 = $0 + $1
+opcode = '000000';       // 0     
+rs = '00000';            // $0
+rt = '00001';            // $1
+rd = '00000';            // $0
+shamt = '00000';         // n/a / 0
+funct = '100000'         // 0x20
+
+instruction = opcode + rs + rt + rd + shamt + funct;
+instructions[3] = instruction;
+
+// SUB INSTRUCTION
+// $5 = $3 - $2
+opcode = '000000';       // 0     
+rs = '00011';            // $3
+rt = '00010';            // $2
+rd = '00101';            // $5
+shamt = '00000';         // n/a / 0
+funct = '100010'         // 0x22
+instruction = opcode + rs + rt + rd + shamt + funct;
+instructions[7] = instruction;
+
+// NOR: doesn't work (seems to add instead) (0x27)
+// OR works (0x25)
+// AND works (0x24)
+
+// AND INSTRUCTION
+// $8 = $10 AND $11 (111...111)
+opcode = '000000';       // 0   
+rs = '01011';            
+rt = '01010';            
+rd = '01000';            // $8
+shamt = '00000';         // n/a / 0
+funct = '100100'         // 0x24
+instruction = opcode + rs + rt + rd + shamt + funct;
+instructions[11] = instruction;
+
 mips.setInstructions(instructions);
-for (let i = 0; i < 9; i++) {
+
+let numCycles = 20;
+for (let i = 0; i < numCycles; i++) {
     mips.write('0');
     mips.write('1');
     mips.write('0');
     console.log('_______CYCLE_'+i+'_OVER_______');
+    console.log(mips._ifToId.pc);
 }
-
+console.log(mips._registerMemory._data);
 
 /*=====  End of MIPS  ======*/
 
