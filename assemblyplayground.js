@@ -1,24 +1,71 @@
 
-// testBrainless();
-// testBrainless2();
+
+/*=============================================
+=                 MIPS                        =
+=============================================*/
+
+const mips = new Mips();
+
+// set register values
+mips._registerMemory._data[0] = '11111111111111111111111111111111'  // $0
+mips._registerMemory._data[1] = '00000000000000000000000000000001'  // $1 = 1
+mips._registerMemory._data[2] = '00000000000000000000000000000011'  // $2 = 3
+
+// ADD INSTRUCTION
+// $0 = $1 + $2
+let opcode = '000000';       // 0     
+let rs = '00001';            // $1
+let rt = '00010';            // $2
+let rd = '00000';            // $0
+let shamt = '00000';         // n/a / 0
+let funct = '100000'         // 0x20
+
+const instruction = opcode + rs + rt + rd + shamt + funct;
+// give instructions
+const instructions = [
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    instruction,
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000',
+    '11111100000000000000000000000000'
+];
+mips.setInstructions(instructions);
+for (let i = 0; i < 9; i++) {
+    mips.write('0');
+    mips.write('1');
+    mips.write('0');
+    console.log('_______CYCLE_'+i+'_OVER_______');
+}
+
+
+/*=====  End of MIPS  ======*/
+
+
+
+
+
+/*----------  Brainless  ----------*/
+
 
 const brainless = new BrainlessCPU();
 let dataIn, invert, arith, pass, loadAcc, accToDb, reset, write, read;
 
-printData();
-printState();
-
-li('0010', '1111');           // li       $02  15       # $02 = 15
-
-move('0001', '0011');         // move     $01 $03       # $01 = $03
-
-add('1000', '0100', '0101');  // add      $08 $04 $05   # $08 = $04 + $05
-
-addi('1001', '1000', '0001')  // addi     $09 $08   1   # $10 = $08 + 1
-
-printData();
-printState();
-
+// testBrainless();
+// testBrainless2();
+// testBrainless3();
 
 function sendInstruction() {
     brainless.executeInstruction(dataIn, addrBus, invert, arith, pass, loadAcc, accToDb, reset, read, write);
@@ -233,6 +280,29 @@ function printBrainless() {
 function printState() {
     console.log(brainless.aluOut, brainless.accum, brainless.dataBus, brainless._programRam.dataOut);
 }
+
+
+
+/*=============================================
+=                  TESTS                      =
+=============================================*/
+
+function testBrainless3() {
+    printData();
+    printState();
+
+    li('0010', '1111');           // li       $02  15       # $02 = 15
+
+    move('0001', '0011');         // move     $01 $03       # $01 = $03
+
+    add('1000', '0100', '0101');  // add      $08 $04 $05   # $08 = $04 + $05
+
+    addi('1001', '1000', '0001')  // addi     $09 $08   1   # $10 = $08 + 1
+
+    printData();
+    printState();
+}
+
 
 function testBrainless2() {
 
@@ -838,6 +908,7 @@ function testBrainless() {
 
 }
 
+/*=====  End of TESTS  ======*/
 
 
 

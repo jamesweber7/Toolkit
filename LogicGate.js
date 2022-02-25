@@ -427,8 +427,16 @@ class LogicGate {
         return this.not(this.eq(bitstrings));
     }
 
+    // returns '1' if all bits in bitstring are low
     static zero(bitstring) {
-        return this.eq(bitstring, '0');
+        const bits = this.split(bitstring);
+        return this.not(this.or(bits));
+    }
+
+    // returns '1' all bits in bitstring are high
+    static set(bitstring) {
+        const bits = this.split(bitstring);
+        return this.and(bits);
     }
 
     static removeLeadingZeros(bitstring) {
@@ -458,8 +466,24 @@ class LogicGate {
         return output;
     }
 
-    static split(bitstring) {
-        return bitstring.split('');
+    static split(bitstring, positions=[]) {
+        const bits = bitstring.split('');
+        if (!Array.isArray(positions)) {
+            positions = [...arguments].splice(1);
+        }
+        // if no positions, return bitstring split into individual bits
+        if (!positions.length) {
+            return bits;
+        }
+        const splitOut = [];
+        for (let i = 0; i < positions.length; i++) {
+            let bitstring = '';
+            for (let j = 0; j < positions[i]; j++) {
+                bitstring = this.merge(bitstring, bits.splice(0, 1));
+            }
+            splitOut.push(bitstring);
+        }
+        return splitOut;
     }
 
     static merge(bitstrings) {
@@ -539,10 +563,232 @@ class LogicGate {
         };
     }
 
-    // a, b 16 bits
-    static alu(a, b, cin, invert, arith, pass) {
+    // 16 bit a, b, 
+    // cin (1 bit)
+    // OPERATIONS:
+    // INVERT, ARITH, PASS
+    // FLAGS:
+    // COUT, OF
+    static ALU16(a, b, cin, invert, arith, pass) {
         const notNeg = this.notNeg(a, invert, arith);
         return this.andAdd(notNeg.y, b, cin, arith, pass);
+    }
+
+    static mipsALUControl(instruction, aluOp) {
+        // only need instruction bits 3-0
+        const f3 = instruction[2];
+        const f2 = instruction[3];
+        const f1 = instruction[4];
+        const f0 = instruction[5];
+
+        const aluOp1 = aluOp[0];
+        const aluOp0 = aluOp[1];
+
+        const op3 = '0';
+        const op2 = 
+        this.or(
+            aluOp0,
+            this.and(
+                this.not(f2),
+                f1,
+                this.not(f0)
+            )
+        );
+        const op1 = 
+        this.nand(
+            aluOp1,
+            this.not(f3), 
+            f2,
+            this.not(f1)
+        );
+        const op0 = 
+        this.and(
+            aluOp1,
+            this.xor(f3,f2),
+            this.xor(f1,f0),
+            this.xnor(f3,f1)
+        );
+        return LogicGate.merge(op3, op2, op1, op0);
+    }
+
+    // Figure B.5.9
+    static singleBitAluAddAndOrNor(a, b, cin, aInvert, bInvert, operation) {
+        a = this.mux(
+            a, 
+            this.not(a),
+            aInvert
+        );
+        b = this.mux(
+            b, 
+            this.not(b),
+            bInvert
+        );
+        const adder = this.fullAdder(a, b, cin);
+
+        const operation1 = this.and(a, b);
+        const operation2 = this.or(a, b);
+        const operation3 = adder.sum;
+
+        const result = this.mux(operation1, operation2, operation3, operation);
+        return {
+            result: result,
+            cout: adder.cout
+        };
+    }
+
+    // opcodes:
+    // 00 → and
+    // 01 → or
+    // 10 → add
+    // 11 → lt
+    // Figure B.5.10 (top)
+    static singleBitAlu(a, b, less, cin, aInvert, bInvert, operation) {
+        a = this.mux(
+            a, 
+            this.not(a),
+            aInvert
+        );
+        b = this.mux(
+            b, 
+            this.not(b),
+            bInvert
+        );
+        const adder = this.fullAdder(a, b, cin);
+        const sum = adder.sum;
+
+        const operation1 = this.and(a, b);
+        const operation2 = this.or(a, b);
+        const operation3 = sum;
+        const operation4 = less;
+
+        const result = this.mux(operation1, operation2, operation3, operation4, operation);
+        return {
+            result: result,
+            cout: adder.cout
+        };
+    }
+
+    // Figure B.5.10 (bottom)
+    static bottomSingleBitAlu(a, b, less, cin, aInvert, bInvert, operation) {
+        a = this.mux(
+            a, 
+            this.not(a),
+            aInvert
+        );
+        b = this.mux(
+            b, 
+            this.not(b),
+            bInvert
+        );
+        const adder = this.fullAdder(a, b, cin);
+        const sum = adder.sum;
+        const cout = adder.cout;
+
+        const operation1 = this.and(a, b);
+        const operation2 = this.or(a, b);
+        const operation3 = sum;
+        const operation4 = less;
+
+        const result = this.mux(operation1, operation2, operation3, operation4, operation);
+        const set = sum;
+        const overflow = this.overflowDetect(cin, cout);
+        return {
+            result: result,
+            set: set,
+            overflow: overflow
+        };
+    }
+
+    static mipsAlu(a, b, opcode) {
+        // 4 bit opcode = (1)aInvert (1)bNegate (2)operation
+        const opcodes = this.split(opcode);
+        const aInvert = opcodes[0];
+        const bNegate = opcodes[1];
+        const operation = this.merge(opcodes[2], opcodes[3]);
+
+        let cin = bNegate;
+        let result = '';
+        let alu;
+        // standard alu array
+        for (let i = 31; i > 0; i--) {
+            alu = this.singleBitAlu(a[i], b[i], '0', cin, aInvert, bNegate, operation);
+            cin = alu.cout;
+            result = alu.result + result;
+        }
+        // bottom alu
+        alu = this.bottomSingleBitAlu(a[0], b[0], '0', cin, aInvert, bNegate, operation);
+        result = alu.result + result;
+
+        // update first alu with bottom alu's set on slt
+        let lsb = result[31];
+        lsb = this.mux(lsb, lsb, lsb, alu.set, operation);
+        result = StringReader.replaceAt(result, lsb, 31);
+
+        return {
+            result: result,
+            overflow: alu.overflow,
+            zero: this.zero(result)
+        };
+    }
+    
+    static addAlu32(a, b) {
+        let result = '';
+        let cin;
+        cin = '0';
+        for (let i = 31; i >= 0; i--) {
+            const adder = this.fullAdder(a[i], b[i], cin);
+            cin = adder.cout;
+            result = adder.sum + result;
+        }
+        return result;
+    }
+
+    static shiftLeft(bitstring, control) {
+        // lsb
+        let shifted = this.or(
+            this.and('0', control),
+            this.and(bitstring[bitstring.length - 1], this.not(control))
+        );
+        for (let i = bitstring.length - 1; i >= 1; i--) {
+            shifted = this.or(
+                this.and(bitstring[i], control),
+                this.and(bitstring[i - 1], this.not(control))
+            ) + shifted;
+        }
+        return shifted;
+    }
+
+    static shiftLeftTwo(bitstring, control) {
+        return this.shiftLeft(
+            this.shiftLeft(bitstring, control),
+            control
+        );
+    }
+
+    static overflowDetect(cin, cout) {
+        return this.xor(cin, cout);
+        // return this.or(
+        //     this.and(
+        //         bInvert,            // a - b
+        //         this.or(
+        //             this.and(
+        //                 this.not(a),
+        //                 this.not(b),
+        //                 sum
+        //             ),
+        //             this.and(
+        //                 a,
+        //                 b,
+        //                 this.not(sum)
+        //             )
+        //         )
+        //     ),
+        //     this.and(
+        //         this.not(bInvert),  // a + b
+        //         this.xnor(a,b),
+        //         this.xor(a,sum)
+        //     )
+        // );
     }
 
     static twosComplement(bitstring) {
