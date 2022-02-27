@@ -1067,8 +1067,7 @@ class Wath {
 
     // return random int ∈ [0, bound] or [bound, bound2]
     static randomInt(bound, bound2=NaN) {
-        let ltHalf = 0.5 - 2**-10;
-        return Math.round(this.random(bound - ltHalf, bound2 + ltHalf));
+        return Math.floor(this.random(bound, bound2 + 1));
     }
 
     // broken
