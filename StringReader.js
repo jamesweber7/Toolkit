@@ -39,12 +39,12 @@ class StringReader {
         return this.substring(str, fromIndex + fromLength, to);
     }
 
-    static substringAfter(str, from, to=this.NULL_INDEX) {
-        if (!this.isIndex(from)) {
-            return this.substring(str, from, to);
-        }
-        str = this.substring(str, from);
-        return str.substring(0, to);
+    static substringAfter(str, from) {
+        return this.substringBetween(str, from);
+    }
+
+    static substringBefore(str, to) {
+        return this.substring(str, 0, to);
     }
 
     static indexAfter(str, after, find) {
@@ -104,7 +104,31 @@ class StringReader {
     }
     
     static replaceAt(str, replaceWith, at) {
-        return this.substring(str, 0, at) + replaceWith + this.substring(str, at + 1);
+        const start = this.substring(str, 0, at);
+        const replaced = replaceWith;
+        let end;
+        if (typeof at === 'string') {
+            if (!str.includes(at)) {
+                throw 'BAD!';
+            }
+            end = str.substring(str.indexOf(at) + at.length);
+        } else {
+            end = str.substring(at + 1);
+        }
+        return start + replaced + end;
+    }
+
+    // excludes from and to from new string
+    static replaceFrom(str, replaceWith, from, to='') {
+        if (!str.includes(from)) {
+            throw 'str does not include from';
+        }
+        let start = this.substringBefore(str, from);
+        str = this.substring(str, from);
+        if (!str.includes(to)) {
+            throw 'str does not include to';
+        }
+        return start + replaceWith + this.substringAfter(str, to);
     }
 
     static mult(str, times) {
@@ -121,6 +145,11 @@ class StringReader {
             return getAlphabeticChar(index - 26) + char;
         }
         return char;
+    }
+
+    static firstWord(str) {
+        str = str.trim();
+        return this.substringBefore(str, ' ');
     }
 
 
